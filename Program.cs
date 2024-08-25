@@ -5,19 +5,27 @@ using TraktToLetterboxdCsv;
 
 // Read Trakt CSV
 using var reader = new StreamReader("trakt-movies.csv");
-using var csv = new CsvReader(reader, new CsvConfiguration(CultureInfo.InvariantCulture));
-var traktWatches = csv.GetRecords<TraktWatch>().ToList();
+using var csvReader = new CsvReader(reader, new CsvConfiguration(CultureInfo.InvariantCulture));
+var traktWatches = csvReader.GetRecords<TraktWatch>().ToList();
 
 // Process Trakt CSV
-var letterboxdLogs = new List<LetterboxLog>(traktWatches.Count);
+using var writer = new StreamWriter("letterboxd-logs.csv");
+using var csvWriter = new CsvWriter(writer, CultureInfo.InvariantCulture);
+
+csvWriter.WriteHeader<LetterboxLog>();
+await csvWriter.NextRecordAsync();
+
 foreach (var movieGroup in traktWatches.GroupBy(x => x.ImdbId))
 {
     var logsForMovie = movieGroup
         .OrderBy(x => x.WatchDate)
         .Select((x, idx) => Convert(x, idx != 0));
-    letterboxdLogs.AddRange(logsForMovie);
+    foreach (var log in logsForMovie)
+    {
+        csvWriter.WriteRecord(log);
+        await csvWriter.NextRecordAsync();
+    }
 }
-
 
 static LetterboxLog Convert(TraktWatch watch, bool IsRewatch)
 {
