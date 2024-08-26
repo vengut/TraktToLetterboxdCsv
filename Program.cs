@@ -6,7 +6,7 @@ using TraktToLetterboxdCsv;
 // Read Trakt CSV
 using var reader = new StreamReader("trakt-movies.csv");
 using var csvReader = new CsvReader(reader, new CsvConfiguration(CultureInfo.InvariantCulture));
-var traktWatches = csvReader.GetRecords<TraktWatch>().ToList();
+var traktWatches = csvReader.GetRecords<TraktWatch>().OrderBy(x => x.WatchDate).ToList();
 
 // Process Trakt CSV
 using var writer = new StreamWriter("letterboxd-logs.csv");
